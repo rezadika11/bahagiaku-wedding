@@ -35,6 +35,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['invitation_id', 'guest_code']);
+            $table->index('name');
+            $table->index('guest_group');
         });
     }
 

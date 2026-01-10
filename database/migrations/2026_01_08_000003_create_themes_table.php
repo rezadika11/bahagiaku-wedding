@@ -42,6 +42,7 @@ return new class extends Migration
             $table->index('slug');
             $table->index('category');
             $table->index('is_active');
+            $table->index('name');
         });
     }
 
