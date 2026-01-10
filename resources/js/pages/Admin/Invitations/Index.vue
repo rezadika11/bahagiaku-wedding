@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ExternalLink, Eye, Pencil, Trash2 } from 'lucide-vue-next';
+import { ExternalLink, Pencil, Trash2 } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
 
 interface Props {
@@ -97,21 +97,15 @@ const handleDelete = () => {
                     <thead class="bg-gray-100 dark:bg-gray-800">
                         <tr>
                             <th class="p-4 font-medium">No</th>
-                            <th class="p-4 font-medium whitespace-nowrap">
-                                Slug
-                            </th>
+
                             <th class="p-4 font-medium whitespace-nowrap">
                                 Couple Name
                             </th>
-                            <th class="p-4 font-medium whitespace-nowrap">
-                                Client
-                            </th>
+
                             <th class="p-4 font-medium whitespace-nowrap">
                                 Theme
                             </th>
-                            <th class="p-4 font-medium whitespace-nowrap">
-                                Date
-                            </th>
+
                             <th class="p-4 font-medium whitespace-nowrap">
                                 Status
                             </th>
@@ -135,25 +129,21 @@ const handleDelete = () => {
                                         : index + 1
                                 }}
                             </td>
-                            <td class="p-4 font-mono text-xs whitespace-nowrap">
-                                {{ inv.slug }}
-                            </td>
+
                             <td class="p-4 font-medium whitespace-nowrap">
-                                {{ inv.groom_name }} & {{ inv.bride_name }}
+                                <Link
+                                    :href="`/admin/invitations/${inv.id}`"
+                                    class="hover:underline"
+                                >
+                                    {{ inv.groom_name }} &
+                                    {{ inv.bride_name }}
+                                </Link>
                             </td>
-                            <td class="p-4 whitespace-nowrap text-gray-600">
-                                {{ inv.client?.name }}
-                            </td>
+
                             <td class="p-4 whitespace-nowrap text-gray-600">
                                 {{ inv.theme?.name }}
                             </td>
-                            <td class="p-4 whitespace-nowrap text-gray-500">
-                                {{
-                                    new Date(
-                                        inv.wedding_date,
-                                    ).toLocaleDateString()
-                                }}
-                            </td>
+
                             <td class="p-4">
                                 <Badge :variant="getStatusVariant(inv.status)">
                                     {{ inv.status }}
@@ -162,11 +152,6 @@ const handleDelete = () => {
                             <td
                                 class="space-x-1 p-2 text-right whitespace-nowrap"
                             >
-                                <Link :href="`/admin/invitations/${inv.id}`">
-                                    <Button size="sm" variant="ghost">
-                                        <Eye class="h-4 w-4" />
-                                    </Button>
-                                </Link>
                                 <Link
                                     :href="`/admin/invitations/${inv.id}/edit`"
                                 >
@@ -191,7 +176,7 @@ const handleDelete = () => {
                         </tr>
                         <tr v-if="invitations.data.length === 0">
                             <td
-                                colspan="8"
+                                colspan="5"
                                 class="p-8 text-center text-gray-500"
                             >
                                 No invitations found.

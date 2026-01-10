@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\InvitationController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\GuestController;
+use App\Http\Controllers\Admin\DashboardController;
 
 Route::get('/', function () {
     return Inertia::render('Home', [
@@ -14,9 +15,13 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-Route::get('dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+
+
+// ...
+
+Route::get('dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 
 require __DIR__ . '/settings.php';
