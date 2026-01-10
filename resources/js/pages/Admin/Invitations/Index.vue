@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ExternalLink, Pencil, Trash2 } from 'lucide-vue-next';
+import { ExternalLink, Loader2, Pencil, Trash2 } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
 
 interface Props {
@@ -22,12 +22,18 @@ interface Props {
 
 const props = defineProps<Props>();
 const search = ref(props.filters.search || '');
+const isLoading = ref(false);
 
 watch(search, (value) => {
+    isLoading.value = true;
     router.get(
         '/admin/invitations',
         { search: value },
-        { preserveState: true, replace: true },
+        {
+            preserveState: true,
+            replace: true,
+            onFinish: () => (isLoading.value = false),
+        },
     );
 });
 
@@ -117,7 +123,22 @@ const handleDelete = () => {
                         </tr>
                     </thead>
                     <tbody>
+                        <!-- Loading State -->
+                        <tr v-if="isLoading">
+                            <td
+                                colspan="5"
+                                class="p-8 text-center text-gray-500"
+                            >
+                                <div class="flex justify-center">
+                                    <Loader2
+                                        class="h-6 w-6 animate-spin text-primary"
+                                    />
+                                </div>
+                            </td>
+                        </tr>
+
                         <tr
+                            v-else
                             v-for="(inv, index) in invitations.data"
                             :key="inv.id"
                             class="border-t hover:bg-gray-50 dark:hover:bg-gray-900"
@@ -174,7 +195,7 @@ const handleDelete = () => {
                                 </Button>
                             </td>
                         </tr>
-                        <tr v-if="invitations.data.length === 0">
+                        <tr v-if="!isLoading && invitations.data.length === 0">
                             <td
                                 colspan="5"
                                 class="p-8 text-center text-gray-500"

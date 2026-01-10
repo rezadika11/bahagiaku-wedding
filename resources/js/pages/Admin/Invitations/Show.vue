@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import Pagination from '@/components/Pagination.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,7 +10,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Form, Head, Link, router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { Trash2 } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 // Interfaces
 interface Guest {
@@ -40,11 +41,24 @@ interface Invitation {
     client: { id: number; name: string };
     theme: { id: number; name: string };
     events: Event[];
-    guests: Guest[];
+    // guests property is removed from here as it's passed separately
 }
 
 const props = defineProps<{
     invitation: Invitation;
+    guests: {
+        data: Guest[];
+        links: any[];
+        total: number;
+        current_page: number;
+        last_page: number;
+        from: number;
+        to: number;
+        per_page: number;
+    };
+    guestFilters: {
+        guest_search?: string;
+    };
 }>();
 
 const breadcrumbs = [
@@ -53,8 +67,23 @@ const breadcrumbs = [
 ];
 
 const activeTab = ref('overview');
+const search = ref(props.guestFilters.guest_search || '');
+const isLoading = ref(false);
 
-// --- Guest Management ---
+watch(search, (value) => {
+    isLoading.value = true;
+    router.get(
+        `/admin/invitations/${props.invitation.id}`, // Maintain current URL
+        { guest_search: value }, // Only send guest_search param
+        {
+            preserveState: true,
+            replace: true,
+            only: ['guests'], // Partial reload for guests only
+            onFinish: () => (isLoading.value = false),
+        },
+    );
+});
+
 // --- Guest Management ---
 const showConfirmDialog = ref(false);
 const guestToDeleteId = ref<number | null>(null);
@@ -86,7 +115,7 @@ const sendWhatsapp = async (guest: Guest) => {
         if (response.data.whatsapp_url) {
             window.open(response.data.whatsapp_url, '_blank');
             // Optimistically update UI or reload to show status
-            router.reload({ only: ['invitation'] });
+            router.reload({ only: ['guests'] });
         }
     } catch (error) {
         alert('Failed to generate WhatsApp link');
@@ -146,7 +175,7 @@ const sendWhatsapp = async (guest: Guest) => {
                             : 'border-transparent text-gray-500 hover:text-gray-700'
                     "
                 >
-                    Guests ({{ invitation.guests.length }})
+                    Guests ({{ guests.total }})
                 </button>
                 <button
                     @click="activeTab = 'events'"
@@ -203,7 +232,7 @@ const sendWhatsapp = async (guest: Guest) => {
                     <CardContent class="grid grid-cols-2 gap-4 text-center">
                         <div class="rounded bg-gray-50 p-4">
                             <div class="text-2xl font-bold">
-                                {{ invitation.guests.length }}
+                                {{ guests.total }}
                             </div>
                             <div class="text-xs text-gray-500">
                                 Total Guests
@@ -276,6 +305,14 @@ const sendWhatsapp = async (guest: Guest) => {
                 </Card>
 
                 <!-- Guest List -->
+                <div class="flex items-center space-x-2">
+                    <Input
+                        v-model="search"
+                        placeholder="Search guests..."
+                        class="max-w-sm"
+                    />
+                </div>
+
                 <Card>
                     <CardContent class="p-0">
                         <table class="w-full text-left text-sm">
@@ -289,8 +326,23 @@ const sendWhatsapp = async (guest: Guest) => {
                                 </tr>
                             </thead>
                             <tbody>
+                                <!-- Loading State -->
+                                <tr v-if="isLoading">
+                                    <td
+                                        colspan="5"
+                                        class="p-8 text-center text-gray-500"
+                                    >
+                                        <div class="flex justify-center">
+                                            <Loader2
+                                                class="h-6 w-6 animate-spin text-primary"
+                                            />
+                                        </div>
+                                    </td>
+                                </tr>
+
                                 <tr
-                                    v-for="guest in invitation.guests"
+                                    v-else
+                                    v-for="guest in guests.data"
                                     :key="guest.id"
                                     class="border-t"
                                 >
@@ -335,18 +387,25 @@ const sendWhatsapp = async (guest: Guest) => {
                                         </Button>
                                     </td>
                                 </tr>
-                                <tr v-if="invitation.guests.length === 0">
+                                <tr
+                                    v-if="
+                                        !isLoading && guests.data.length === 0
+                                    "
+                                >
                                     <td
                                         colspan="5"
                                         class="p-8 text-center text-gray-500"
                                     >
-                                        No guests added yet.
+                                        No guests found.
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </CardContent>
                 </Card>
+
+                <!-- Pagination -->
+                <Pagination :links="guests.links" />
             </div>
 
             <!-- Confirm Dialog -->

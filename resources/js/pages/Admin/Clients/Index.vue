@@ -31,12 +31,18 @@ interface Props {
 
 const props = defineProps<Props>();
 const search = ref(props.filters.search || '');
+const isLoading = ref(false);
 
 watch(search, (value) => {
+    isLoading.value = true;
     router.get(
         '/admin/clients',
         { search: value },
-        { preserveState: true, replace: true },
+        {
+            preserveState: true,
+            replace: true,
+            onFinish: () => (isLoading.value = false),
+        },
     );
 });
 
@@ -109,7 +115,22 @@ const handleDelete = () => {
                         </tr>
                     </thead>
                     <tbody>
+                        <!-- Loading State -->
+                        <tr v-if="isLoading">
+                            <td
+                                colspan="6"
+                                class="p-8 text-center text-gray-500"
+                            >
+                                <div class="flex justify-center">
+                                    <Loader2
+                                        class="h-6 w-6 animate-spin text-primary"
+                                    />
+                                </div>
+                            </td>
+                        </tr>
+
                         <tr
+                            v-else
                             v-for="(client, index) in clients.data"
                             :key="client.id"
                             class="border-t hover:bg-gray-50 dark:hover:bg-gray-900"
@@ -171,7 +192,7 @@ const handleDelete = () => {
                                 </Button>
                             </td>
                         </tr>
-                        <tr v-if="clients.data.length === 0">
+                        <tr v-if="!isLoading && clients.data.length === 0">
                             <td
                                 colspan="6"
                                 class="p-8 text-center text-gray-500"

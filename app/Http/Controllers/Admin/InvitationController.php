@@ -73,10 +73,22 @@ class InvitationController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Invitation $invitation)
+    public function show(Request $request, Invitation $invitation)
     {
+        $guestQuery = $invitation->guests()->orderBy('id', 'desc');
+
+        if ($request->has('guest_search')) {
+            $search = strtolower($request->guest_search);
+            $guestQuery->where(function ($q) use ($search) {
+                $q->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
+                    ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
         return Inertia::render('Admin/Invitations/Show', [
-            'invitation' => $invitation->load(['client', 'theme', 'events', 'guests']),
+            'invitation' => $invitation->load(['client', 'theme', 'events']),
+            'guests' => $guestQuery->paginate(10)->withQueryString(),
+            'guestFilters' => $request->only(['guest_search']),
         ]);
     }
 
